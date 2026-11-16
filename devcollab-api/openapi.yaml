@@ -1,0 +1,1779 @@
+openapi: 3.0.1
+info:
+  title: devcollab-api
+  version: 1.0.0
+  description: 'API REST de DevCollab : développeurs, projets open source, contributions, pull requests, reviews de code et fil d''activité.
+
+
+    Toutes les routes (sauf OPTIONS) exigent un jeton ID Cognito dans l''en-tête `Authorization`.'
+servers:
+- url: https://{apiId}.execute-api.us-east-1.amazonaws.com/{stage}
+  variables:
+    apiId:
+      default: gn25if1p83
+    stage:
+      default: prod
+tags:
+- name: Utilisateurs
+- name: Abonnements
+- name: Projets
+- name: Contributions
+- name: Pull requests
+- name: Reviews
+- name: Activité
+- name: CORS
+paths:
+  /users/me:
+    get:
+      tags:
+      - Utilisateurs
+      summary: Profil de l'utilisateur connecté
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+      description: Le profil est créé automatiquement à la première requête à partir des informations Cognito.
+    put:
+      tags:
+      - Utilisateurs
+      summary: Mettre à jour son profil et ses compétences
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+    options:
+      parameters: []
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+  /users:
+    get:
+      tags:
+      - Utilisateurs
+      summary: Rechercher des développeurs
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+      parameters:
+      - name: q
+        in: query
+        required: false
+        description: Recherche sur le nom d'utilisateur ou le nom affiché
+        schema:
+          type: string
+      - name: skill
+        in: query
+        required: false
+        description: Filtrer par compétence (insensible à la casse)
+        schema:
+          type: string
+    options:
+      parameters: []
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+  /users/{id}:
+    get:
+      tags:
+      - Utilisateurs
+      summary: Profil d'un développeur
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant de l'utilisateur (sub Cognito)
+        schema:
+          type: string
+    options:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: id
+        schema:
+          type: string
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+  /users/{id}/follow:
+    post:
+      tags:
+      - Abonnements
+      summary: Suivre un développeur
+      security:
+      - cognito: []
+      responses:
+        '204':
+          description: Succès, pas de contenu
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant de l'utilisateur (sub Cognito)
+        schema:
+          type: string
+    delete:
+      tags:
+      - Abonnements
+      summary: Ne plus suivre un développeur
+      security:
+      - cognito: []
+      responses:
+        '204':
+          description: Succès, pas de contenu
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant de l'utilisateur (sub Cognito)
+        schema:
+          type: string
+    options:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: id
+        schema:
+          type: string
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+  /users/{id}/followers:
+    get:
+      tags:
+      - Abonnements
+      summary: Abonnés d'un développeur
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant de l'utilisateur (sub Cognito)
+        schema:
+          type: string
+    options:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: id
+        schema:
+          type: string
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+  /users/{id}/following:
+    get:
+      tags:
+      - Abonnements
+      summary: Abonnements d'un développeur
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant de l'utilisateur (sub Cognito)
+        schema:
+          type: string
+    options:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: id
+        schema:
+          type: string
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-utilisateurs/invocations
+  /projects:
+    get:
+      tags:
+      - Projets
+      summary: Lister / rechercher des projets
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+      parameters:
+      - name: q
+        in: query
+        required: false
+        description: Recherche sur le nom et la description
+        schema:
+          type: string
+      - name: tech
+        in: query
+        required: false
+        description: Filtrer par technologie
+        schema:
+          type: string
+      - name: ownerId
+        in: query
+        required: false
+        description: Projets dont l'utilisateur est propriétaire ou contributeur
+        schema:
+          type: string
+    post:
+      tags:
+      - Projets
+      summary: Créer un projet
+      security:
+      - cognito: []
+      responses:
+        '201':
+          description: Projet créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflit avec l'état actuel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+    options:
+      parameters: []
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+  /projects/{id}:
+    get:
+      tags:
+      - Projets
+      summary: Détail d'un projet
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant du projet (UUID)
+        schema:
+          type: string
+    put:
+      tags:
+      - Projets
+      summary: Modifier un projet (propriétaire)
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Action non autorisée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflit avec l'état actuel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant du projet (UUID)
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+    delete:
+      tags:
+      - Projets
+      summary: Supprimer un projet (propriétaire)
+      security:
+      - cognito: []
+      responses:
+        '204':
+          description: Succès, pas de contenu
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Action non autorisée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant du projet (UUID)
+        schema:
+          type: string
+    options:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: id
+        schema:
+          type: string
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+  /projects/{id}/contributions:
+    get:
+      tags:
+      - Contributions
+      summary: Demandes de contribution d'un projet
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContributionRequest'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant du projet (UUID)
+        schema:
+          type: string
+    post:
+      tags:
+      - Contributions
+      summary: Demander à contribuer
+      security:
+      - cognito: []
+      responses:
+        '201':
+          description: Demande créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionRequest'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflit avec l'état actuel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant du projet (UUID)
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContributionInput'
+    options:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: id
+        schema:
+          type: string
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+  /projects/{id}/contributions/{cid}:
+    put:
+      tags:
+      - Contributions
+      summary: Accepter ou refuser une demande (propriétaire)
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionRequest'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Action non autorisée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflit avec l'état actuel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+      description: Accepter une demande ajoute l'utilisateur aux contributeurs du projet.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant du projet (UUID)
+        schema:
+          type: string
+      - name: cid
+        in: path
+        required: true
+        description: Identifiant de la demande (UUID)
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContributionDecision'
+    options:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: id
+        schema:
+          type: string
+      - name: cid
+        in: path
+        required: true
+        description: cid
+        schema:
+          type: string
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-projets/invocations
+  /pull-requests:
+    get:
+      tags:
+      - Pull requests
+      summary: Lister les pull requests
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PullRequest'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-pull-requests/invocations
+      parameters:
+      - name: projectId
+        in: query
+        required: false
+        description: Filtrer par projet
+        schema:
+          type: string
+      - name: authorId
+        in: query
+        required: false
+        description: Filtrer par auteur
+        schema:
+          type: string
+      - name: status
+        in: query
+        required: false
+        description: Filtrer par statut
+        schema:
+          type: string
+          enum:
+          - open
+          - closed
+          - merged
+    post:
+      tags:
+      - Pull requests
+      summary: Ouvrir une pull request (propriétaire ou contributeur)
+      security:
+      - cognito: []
+      responses:
+        '201':
+          description: Pull request créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullRequest'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Action non autorisée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-pull-requests/invocations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PullRequestInput'
+    options:
+      parameters: []
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-pull-requests/invocations
+  /pull-requests/{id}:
+    get:
+      tags:
+      - Pull requests
+      summary: Détail d'une pull request avec ses fichiers
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullRequest'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-pull-requests/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant de la pull request (UUID)
+        schema:
+          type: string
+    put:
+      tags:
+      - Pull requests
+      summary: Mettre à jour, fermer, rouvrir ou merger
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullRequest'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Action non autorisée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflit avec l'état actuel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-pull-requests/invocations
+      description: 'Titre/description : auteur uniquement, PR ouverte. Fermer/rouvrir : auteur ou propriétaire du projet. Merger : propriétaire uniquement, PR ouverte. Une PR mergée est définitive.'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant de la pull request (UUID)
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PullRequestUpdate'
+    options:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: id
+        schema:
+          type: string
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-pull-requests/invocations
+  /reviews:
+    get:
+      tags:
+      - Reviews
+      summary: Reviews d'une pull request
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-reviews/invocations
+      parameters:
+      - name: pullRequestId
+        in: query
+        required: true
+        description: Identifiant de la pull request
+        schema:
+          type: string
+    post:
+      tags:
+      - Reviews
+      summary: Soumettre une review avec commentaires de ligne
+      security:
+      - cognito: []
+      responses:
+        '201':
+          description: Review créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflit avec l'état actuel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-reviews/invocations
+      description: La PR doit être ouverte. L'auteur ne peut que commenter sa propre PR. Les commentaires de ligne doivent cibler un fichier de la PR.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewInput'
+    options:
+      parameters: []
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-reviews/invocations
+  /reviews/{id}:
+    get:
+      tags:
+      - Reviews
+      summary: Détail d'une review
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-reviews/invocations
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant de la review (UUID)
+        schema:
+          type: string
+    options:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: id
+        schema:
+          type: string
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-reviews/invocations
+  /activity:
+    get:
+      tags:
+      - Activité
+      summary: Fil d'activité (lecture seule)
+      security:
+      - cognito: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-activite/invocations
+      parameters:
+      - name: userId
+        in: query
+        required: false
+        description: Activité d'un développeur (acteur ou cible)
+        schema:
+          type: string
+      - name: projectId
+        in: query
+        required: false
+        description: Activité d'un projet
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        description: Nombre maximum d'éléments (1-100, défaut 50)
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+      - name: before
+        in: query
+        required: false
+        description: 'Pagination : éléments antérieurs à cette date ISO 8601'
+        schema:
+          type: string
+          format: date-time
+    options:
+      parameters: []
+      tags:
+      - CORS
+      summary: Pré-vol CORS
+      security: []
+      responses:
+        '204':
+          description: En-têtes CORS
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        passthroughBehavior: when_no_match
+        uri: arn:aws:apigateway:${AWS_REGION}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT_ID}:function:devcollab-activite/invocations
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+        bio:
+          type: string
+        location:
+          type: string
+          nullable: true
+        githubUrl:
+          type: string
+          nullable: true
+        skills:
+          type: array
+          items:
+            type: string
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        isFollowing:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    UserUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+          maxLength: 100
+        bio:
+          type: string
+          maxLength: 280
+        location:
+          type: string
+          maxLength: 100
+        githubUrl:
+          type: string
+          format: uri
+        skills:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+      required:
+      - displayName
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        repoUrl:
+          type: string
+          nullable: true
+        technologies:
+          type: array
+          items:
+            type: string
+        ownerId:
+          type: string
+        ownerName:
+          type: string
+        contributors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+        openPullRequests:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProjectInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 80
+        description:
+          type: string
+        repoUrl:
+          type: string
+          format: uri
+        technologies:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+      required:
+      - name
+      - description
+    ContributionRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+        username:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - rejected
+        createdAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: string
+          format: date-time
+          nullable: true
+    ContributionInput:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 2000
+      required:
+      - message
+    ContributionDecision:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - accepted
+          - rejected
+      required:
+      - status
+    FileChange:
+      type: object
+      properties:
+        path:
+          type: string
+        patch:
+          type: string
+          description: Diff unifié (format git diff)
+      required:
+      - path
+      - patch
+    PullRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        projectName:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        sourceBranch:
+          type: string
+        targetBranch:
+          type: string
+        status:
+          type: string
+          enum:
+          - open
+          - closed
+          - merged
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileChange'
+        reviewsCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        mergedAt:
+          type: string
+          format: date-time
+          nullable: true
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+    PullRequestInput:
+      type: object
+      properties:
+        projectId:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 120
+        description:
+          type: string
+        sourceBranch:
+          type: string
+        targetBranch:
+          type: string
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileChange'
+          maxItems: 50
+      required:
+      - projectId
+      - title
+      - sourceBranch
+      - targetBranch
+    PullRequestUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+          - open
+          - closed
+          - merged
+    LineComment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        file:
+          type: string
+        line:
+          type: integer
+        body:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pullRequestId:
+          type: string
+          format: uuid
+        reviewerId:
+          type: string
+        reviewerName:
+          type: string
+        verdict:
+          type: string
+          enum:
+          - approved
+          - changes_requested
+          - commented
+        body:
+          type: string
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineComment'
+        createdAt:
+          type: string
+          format: date-time
+    LineCommentInput:
+      type: object
+      properties:
+        file:
+          type: string
+        line:
+          type: integer
+          minimum: 0
+        body:
+          type: string
+      required:
+      - file
+      - line
+      - body
+    ReviewInput:
+      type: object
+      properties:
+        pullRequestId:
+          type: string
+          format: uuid
+        verdict:
+          type: string
+          enum:
+          - approved
+          - changes_requested
+          - commented
+          default: commented
+        body:
+          type: string
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineCommentInput'
+      required:
+      - pullRequestId
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+          - project_created
+          - contribution_requested
+          - contribution_accepted
+          - pr_opened
+          - pr_merged
+          - pr_closed
+          - review_submitted
+          - user_followed
+        actorId:
+          type: string
+        actorName:
+          type: string
+        projectId:
+          type: string
+          nullable: true
+        projectName:
+          type: string
+          nullable: true
+        targetId:
+          type: string
+          nullable: true
+        targetLabel:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+  securitySchemes:
+    cognito:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: cognito_user_pools
+      x-amazon-apigateway-authorizer:
+        type: cognito_user_pools
+        providerARNs:
+        - arn:aws:cognito-idp:${AWS_REGION}:${AWS_ACCOUNT_ID}:userpool/${COGNITO_USER_POOL_ID}
+x-amazon-apigateway-gateway-responses:
+  DEFAULT_4XX:
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: '''*'''
+      gatewayresponse.header.Access-Control-Allow-Headers: '''Content-Type,Authorization'''
+      gatewayresponse.header.Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
+    responseTemplates:
+      application/json: '{"message":$context.error.messageString}'
+  DEFAULT_5XX:
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: '''*'''
+      gatewayresponse.header.Access-Control-Allow-Headers: '''Content-Type,Authorization'''
+      gatewayresponse.header.Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
+    responseTemplates:
+      application/json: '{"message":$context.error.messageString}'
